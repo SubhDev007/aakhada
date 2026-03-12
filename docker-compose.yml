@@ -1,0 +1,69 @@
+version: '3.8'
+services:
+
+  # PHP Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        user: sammy
+        uid: 1000
+    image: aakhada-app
+    container_name: aakhada-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - aakhada-network
+
+  # Nginx Service
+  web:
+    image: nginx:alpine
+    container_name: aakhada-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - aakhada-network
+
+  # MySQL Service
+  db:
+    image: mysql:8.0
+    container_name: aakhada-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - aakhada-db-data:/var/lib/mysql
+    networks:
+      - aakhada-network
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: aakhada-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+    networks:
+      - aakhada-network
+
+networks:
+  aakhada-network:
+    driver: bridge
+
+volumes:
+  aakhada-db-data:
+    driver: local
