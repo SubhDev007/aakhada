@@ -111,12 +111,30 @@ class GameService
                 $candidates = array_keys($pools, $maxStake);
                 $winningNumber = $candidates[array_rand($candidates)];
             } else {
-                // Average logic - simplified (random for now as "Average" is ambiguous without specific detailed algo)
-                // User said "Medium (True Average): The number with the middle-tier amount of bets."
-                asort($pools);
-                $keys = array_keys($pools);
-                $middleIndex = floor(count($keys) / 2);
-                $winningNumber = $keys[$middleIndex];
+                // Average logic: pick the number whose total stake is closest to the mean
+                // Only consider numbers that actually have bets
+                $bettedPools = array_filter($pools, fn($v) => $v > 0);
+
+                if (empty($bettedPools)) {
+                    // No bets at all — pick a random number
+                    $winningNumber = array_rand($pools);
+                } else {
+                    $mean = array_sum($bettedPools) / count($bettedPools);
+
+                    // Find number with stake closest to the mean
+                    $minDistance = PHP_FLOAT_MAX;
+                    $candidates  = [];
+                    foreach ($bettedPools as $number => $stake) {
+                        $distance = abs($stake - $mean);
+                        if ($distance < $minDistance) {
+                            $minDistance = $distance;
+                            $candidates  = [$number];
+                        } elseif ($distance === $minDistance) {
+                            $candidates[] = $number; // tie — keep all for random pick
+                        }
+                    }
+                    $winningNumber = $candidates[array_rand($candidates)];
+                }
             }
         }
 
