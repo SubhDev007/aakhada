@@ -11,14 +11,35 @@ class GameViewController extends Controller
 {
     public function index()
     {
+        // Currently active round (start_time <= now AND end_time > now)
         $round = Round::active()->first();
+
+        // If no active round, find the next upcoming round for today
+        $nextRound = null;
+        if (!$round) {
+            $nextRound = Round::where('status', 'active')
+                ->where('start_time', '>', now())
+                ->orderBy('start_time')
+                ->first();
+        }
+
         $activeBets = collect([]);
+        $betHistory = collect([]);
 
         if (Auth::check() && $round) {
             $activeBets = Auth::user()->bets()
                 ->where('round_id', $round->id)
                 ->where('status', 'pending')
                 ->latest()
+                ->get();
+        }
+
+        if (Auth::check()) {
+            $betHistory = Auth::user()->bets()
+                ->where('status', '!=', 'pending')
+                ->with('round')
+                ->latest()
+                ->limit(20)
                 ->get();
         }
 
@@ -33,24 +54,6 @@ class GameViewController extends Controller
             ->limit(10)
             ->get();
 
-        $betHistory = collect([]);
-
-        if (Auth::check()) {
-            if ($round) {
-                $activeBets = Auth::user()->bets()
-                    ->where('round_id', $round->id)
-                    ->where('status', 'pending')
-                    ->latest()
-                    ->get();
-            }
-
-            $betHistory = Auth::user()->bets()
-                ->where('status', '!=', 'pending')
-                ->latest()
-                ->limit(20)
-                ->get();
-        }
-
-        return view('game.index', compact('round', 'activeBets', 'noBetBufferSeconds', 'lastRound', 'pastRounds', 'betHistory'));
+        return view('game.index', compact('round', 'nextRound', 'activeBets', 'noBetBufferSeconds', 'lastRound', 'pastRounds', 'betHistory'));
     }
 }

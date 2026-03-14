@@ -82,7 +82,7 @@ class GameController extends Controller
     {
         // Calculate result for ended rounds
         \Illuminate\Support\Facades\Artisan::call('game:calculate-result');
-        // Ensure a new round starts if needed
+        // Generate today's scheduled rounds
         \Illuminate\Support\Facades\Artisan::call('game:start');
 
         return response()->json(['message' => 'Game process triggered successfully.', 'output' => \Illuminate\Support\Facades\Artisan::output()]);

@@ -17,7 +17,7 @@ Route::get('/', [App\Http\Controllers\GameViewController::class, 'index'])->midd
 
 
 
-Route::middleware(['auth', 'role:superadmin,bookman'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/monitoring', [App\Http\Controllers\Admin\AdminDashboardController::class, 'monitoring'])->name('monitoring');
     Route::get('/bets', [App\Http\Controllers\Admin\AdminDashboardController::class, 'bets'])->name('bets.index');
@@ -31,6 +31,34 @@ Route::middleware(['auth', 'role:superadmin,bookman'])->prefix('admin')->name('a
         Route::get('/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('store');
         Route::post('/{user}/add-funds', [App\Http\Controllers\Admin\UserController::class, 'addFunds'])->name('add-funds');
+    });
+
+    Route::prefix('bookmen')->name('bookmen.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\BookmanController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\BookmanController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\BookmanController::class, 'store'])->name('store');
+        Route::post('/{bookman}/add-funds', [App\Http\Controllers\Admin\BookmanController::class, 'addFunds'])->name('add-funds');
+    });
+
+    Route::prefix('round-schedules')->name('round-schedules.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\RoundScheduleController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\RoundScheduleController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\RoundScheduleController::class, 'store'])->name('store');
+        Route::get('/{roundSchedule}/edit', [App\Http\Controllers\Admin\RoundScheduleController::class, 'edit'])->name('edit');
+        Route::put('/{roundSchedule}', [App\Http\Controllers\Admin\RoundScheduleController::class, 'update'])->name('update');
+        Route::post('/{roundSchedule}/toggle', [App\Http\Controllers\Admin\RoundScheduleController::class, 'toggleActive'])->name('toggle');
+        Route::delete('/{roundSchedule}', [App\Http\Controllers\Admin\RoundScheduleController::class, 'destroy'])->name('destroy');
+    });
+});
+
+Route::middleware(['auth', 'role:bookman'])->prefix('bookman')->name('bookman.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Bookman\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Bookman\UserController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Bookman\UserController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Bookman\UserController::class, 'store'])->name('store');
+        Route::post('/{user}/add-funds', [App\Http\Controllers\Bookman\UserController::class, 'addFunds'])->name('add-funds');
     });
 });
 

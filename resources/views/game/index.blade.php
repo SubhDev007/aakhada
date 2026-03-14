@@ -20,10 +20,22 @@
     <div class="container mt-3">
         <!-- Round Info -->
         <div class="stats-card p-3 mb-3 text-center">
-            <h6 class="text-uppercase opacity-75">Current Round</h6>
-            <h3 id="round-serial">{{ $round ? $round->round_serial : 'Waiting...' }}</h3>
-            <div class="display-6 fw-bold" id="countdown">00:00:00</div>
-            <small>Ends at: {{ $round ? $round->end_time->format('H:i:s') : '--:--' }}</small>
+            @if($round)
+                <h6 class="text-uppercase opacity-75">Current Round</h6>
+                <h3 id="round-serial">{{ $round->name ?? $round->round_serial }}</h3>
+                <div class="display-6 fw-bold" id="countdown">00:00:00</div>
+                <small>Ends at: {{ $round->end_time->format('h:i A') }}</small>
+            @elseif($nextRound)
+                <h6 class="text-uppercase opacity-75 text-warning">Next Round</h6>
+                <h3 id="round-serial">{{ $nextRound->name ?? $nextRound->round_serial }}</h3>
+                <div class="display-6 fw-bold text-warning" id="countdown">00:00:00</div>
+                <small>Starts at: {{ $nextRound->start_time->format('h:i A') }}</small>
+                <div class="mt-2"><span class="badge bg-warning text-dark">Betting opens soon</span></div>
+            @else
+                <h6 class="text-uppercase opacity-75 text-muted">No Round Active</h6>
+                <div class="display-6 fw-bold text-muted" id="countdown">--:--:--</div>
+                <small class="text-muted">Check back later for the next round.</small>
+            @endif
         </div>
 
 
@@ -134,32 +146,56 @@
 @push('scripts')
     <script>
         let selectedNumber = null;
-        let roundEndTime = "{{ $round ? $round->end_time->toIso8601String() : '' }}";
+        let roundEndTime   = "{{ $round ? $round->end_time->toIso8601String() : '' }}";
+        let roundStartTime = "{{ $nextRound ? $nextRound->start_time->toIso8601String() : '' }}";
+        let isUpcoming     = {{ $round ? 'false' : ($nextRound ? 'true' : 'false') }};
         let noBetBufferSeconds = {{ $noBetBufferSeconds ?? 0 }};
         let reloadScheduled = false;
 
         function updateTimer() {
-            if (!roundEndTime) {
-                document.getElementById('countdown').innerText = "00:00:00";
-                return;
-            }
             const now = new Date();
-            const end = new Date(roundEndTime);
+            const grid = document.querySelector('.game-grid');
 
-            if (isNaN(end.getTime())) {
-                document.getElementById('countdown').innerText = "00:00:00";
+            if (isUpcoming && roundStartTime) {
+                // Countdown to when betting OPENS
+                const start = new Date(roundStartTime);
+                const diff = start - now;
+
+                if (diff <= 0) {
+                    // Round has started — reload to activate it
+                    if (!reloadScheduled) {
+                        reloadScheduled = true;
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                    document.getElementById('countdown').innerText = "Starting...";
+                    return;
+                }
+
+                // Lock the grid while waiting
+                if (grid) grid.classList.add('opacity-50', 'pe-none');
+
+                const h = Math.floor(diff / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('countdown').innerText =
+                    `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
                 return;
             }
 
+            if (!roundEndTime) {
+                document.getElementById('countdown').innerText = "--:--:--";
+                return;
+            }
+
+            const end = new Date(roundEndTime);
             const diff = end - now;
 
-            // Check Lock-in for UI
+            // No-bet buffer lock
             if (typeof noBetBufferSeconds !== 'undefined') {
                 const diffSeconds = diff / 1000;
-                const grid = document.querySelector('.game-grid');
                 if (diffSeconds < noBetBufferSeconds) {
                     if (grid && !grid.classList.contains('opacity-50')) {
-                        grid.classList.add('opacity-50', 'pe-none'); // Bootstrap opacity and pointer-events-none
+                        grid.classList.add('opacity-50', 'pe-none');
                     }
                 } else {
                     if (grid && grid.classList.contains('opacity-50')) {
@@ -172,7 +208,7 @@
                 document.getElementById('countdown').innerText = "00:00:00";
                 if (!reloadScheduled) {
                     reloadScheduled = true;
-                    setTimeout(() => location.reload(), 3000); // Reload after 3 seconds
+                    setTimeout(() => location.reload(), 3000);
                 }
                 return;
             }
@@ -180,7 +216,6 @@
             const h = Math.floor(diff / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((diff % (1000 * 60)) / 1000);
-
             document.getElementById('countdown').innerText =
                 `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }

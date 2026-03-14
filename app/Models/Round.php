@@ -8,6 +8,8 @@ class Round extends Model
 {
     protected $fillable = [
         'round_serial',
+        'name',
+        'round_schedule_id',
         'start_time',
         'end_time',
         'result_number',
@@ -24,6 +26,11 @@ class Round extends Model
     public function bets()
     {
         return $this->hasMany(Bet::class);
+    }
+
+    public function schedule()
+    {
+        return $this->belongsTo(RoundSchedule::class, 'round_schedule_id');
     }
 
     public function scopeActive($query)

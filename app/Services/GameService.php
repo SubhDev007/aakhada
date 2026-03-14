@@ -171,28 +171,44 @@ class GameService
         });
     }
 
-    public function createNextRound()
+    /**
+     * Generate all rounds for today based on active RoundSchedule templates.
+     * Skips schedules that already have a round created for today.
+     * Returns an array of newly created Round models.
+     */
+    public function generateTodaysRounds(): array
     {
-        // Logic to create next round based on schedule
-        $duration = (float) Setting::getValue('round_duration_minutes', 180); // 3 hours default
+        $schedules = \App\Models\RoundSchedule::active()->orderBy('start_time')->get();
+        $created = [];
 
-        $lastRound = Round::latest('end_time')->first();
-        $startTime = $lastRound ? $lastRound->end_time : now();
-        // If last round ended in the past (gap), start now
-        if ($startTime->lessThan(now())) {
-            $startTime = now();
+        foreach ($schedules as $schedule) {
+            // Skip if today's round already exists for this schedule
+            if ($schedule->hasTodaysRound()) {
+                continue;
+            }
+
+            $startTime = \Carbon\Carbon::today()->setTimeFromTimeString($schedule->start_time);
+            $endTime   = $startTime->copy()->addMinutes((int) $schedule->duration_minutes);
+
+            // Don't create a round that has already fully passed today
+            if ($endTime->isPast()) {
+                continue;
+            }
+
+            $serial = $startTime->format('Ymd') . '-' . \Illuminate\Support\Str::slug($schedule->name);
+
+            $round = Round::create([
+                'round_serial'      => $serial,
+                'name'              => $schedule->name,
+                'round_schedule_id' => $schedule->id,
+                'start_time'        => $startTime,
+                'end_time'          => $endTime,
+                'status'            => 'active',
+            ]);
+
+            $created[] = $round;
         }
 
-        // Align to minutes if needed? Keeping it simple.
-
-        $endTime = $startTime->copy()->addMinutes($duration);
-        $serial = $startTime->format('Ymd') . '-R' . (Round::whereDate('start_time', $startTime->toDateString())->count() + 1);
-
-        return Round::create([
-            'round_serial' => $serial,
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'status' => 'active'
-        ]);
+        return $created;
     }
 }

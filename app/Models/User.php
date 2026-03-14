@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'wallet_balance',
         'role',
+        'created_by',
     ];
 
     /**

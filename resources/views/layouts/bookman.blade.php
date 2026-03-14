@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }} Admin</title>
+    <title>{{ config('app.name', 'Laravel') }} Bookman</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
 
         .sidebar {
             min-height: 100vh;
-            background: #212529;
+            background: #7f1d1d; /* Deep red */
             color: white;
         }
 
@@ -59,49 +59,26 @@
             <nav class="col-md-3 col-lg-2 sidebar d-md-block collapse">
                 <div class="position-sticky pt-3">
                     <div class="px-4 mb-4">
-                        <h4 class="fw-bold">Akhada Admin</h4>
+                        <h4 class="fw-bold">Bookman Panel</h4>
+                        <div class="d-flex align-items-center mt-3 p-2 bg-white bg-opacity-10 rounded">
+                            <i class="bi bi-wallet2 text-white me-2 fs-5"></i>
+                            <div>
+                                <small class="text-white opacity-75 d-block" style="line-height: 1;">Balance</small>
+                                <span class="fw-bold text-white">₹{{ number_format(auth()->user()->wallet_balance, 2) }}</span>
+                            </div>
+                        </div>
                     </div>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                                href="{{ route('admin.dashboard') }}">
+                            <a class="nav-link {{ request()->routeIs('bookman.dashboard') ? 'active' : '' }}"
+                                href="{{ route('bookman.dashboard') }}">
                                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}"
-                                href="{{ route('admin.monitoring') }}">
-                                <i class="bi bi-eye me-2"></i> Live Monitoring
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-                                href="{{ route('admin.users.index') }}">
-                                <i class="bi bi-people me-2"></i> User Management
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.bookmen.*') ? 'active' : '' }}"
-                                href="{{ route('admin.bookmen.index') }}">
-                                <i class="bi bi-person-badge-fill me-2"></i> Bookman Management
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.bets.index') ? 'active' : '' }}"
-                                href="{{ route('admin.bets.index') }}">
-                                <i class="bi bi-card-list me-2"></i> Bet History
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.settings.edit') ? 'active' : '' }}"
-                                href="{{ route('admin.settings.edit') }}">
-                                <i class="bi bi-gear me-2"></i> Settings
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.round-schedules.*') ? 'active' : '' }}"
-                                href="{{ route('admin.round-schedules.index') }}">
-                                <i class="bi bi-clock-history me-2"></i> Round Schedules
+                            <a class="nav-link {{ request()->routeIs('bookman.users.*') ? 'active' : '' }}"
+                                href="{{ route('bookman.users.index') }}">
+                                <i class="bi bi-people me-2"></i> My Users
                             </a>
                         </li>
                         <li class="nav-item mt-4 border-top pt-4">
@@ -126,6 +103,13 @@
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
