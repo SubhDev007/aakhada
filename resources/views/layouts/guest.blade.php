@@ -9,16 +9,20 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600|outfit:800,900&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+            <div class="mb-8">
+                <a href="/" class="group flex items-center justify-center">
+                    <div class="bg-white dark:bg-gray-900 px-6 py-2 rounded-xl shadow-2xl transform transition-all group-hover:scale-105 group-active:scale-95 border-b-4 border-gray-200 dark:border-gray-700">
+                        <span class="text-3xl font-black tracking-[0.2em] text-black dark:text-white" style="font-family: 'Outfit', sans-serif;">
+                            AAKHADA
+                        </span>
+                    </div>
                 </a>
             </div>
 
