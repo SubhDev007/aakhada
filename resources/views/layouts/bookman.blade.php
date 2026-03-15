@@ -81,6 +81,12 @@
                                 <i class="bi bi-people me-2"></i> My Users
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('bookman.report') ? 'active' : '' }}"
+                                href="{{ route('bookman.report') }}">
+                                <i class="bi bi-receipt-cutoff me-2"></i> Daily Report
+                            </a>
+                        </li>
                         <li class="nav-item mt-4 border-top pt-4">
                             <a class="nav-link" href="{{ route('game.index') }}">
                                 <i class="bi bi-controller me-2"></i> Go to Game

@@ -26,6 +26,16 @@ class CheckRole
             return $next($request);
         }
 
-        abort(403, 'Unauthorized');
+        // Redirect to their own dashboard instead of showing a 403
+        if ($user->role === 'superadmin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Access denied. Redirected to your dashboard.');
+        }
+
+        if ($user->role === 'bookman') {
+            return redirect()->route('bookman.dashboard')->with('error', 'Access denied. Redirected to your dashboard.');
+        }
+
+        // Regular users get sent to game
+        return redirect()->route('game.index')->with('error', 'Access denied.');
     }
 }

@@ -104,6 +104,12 @@
                                 <i class="bi bi-clock-history me-2"></i> Round Schedules
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.settlements.*') ? 'active' : '' }}"
+                                href="{{ route('admin.settlements.index') }}">
+                                <i class="bi bi-receipt-cutoff me-2"></i> Daily Settlement
+                            </a>
+                        </li>
                         <li class="nav-item mt-4 border-top pt-4">
                             <a class="nav-link" href="{{ route('game.index') }}">
                                 <i class="bi bi-controller me-2"></i> Go to Game

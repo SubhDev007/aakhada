@@ -13,7 +13,7 @@ Route::get('/clear-all', function () {
     Artisan::call('optimize:clear');
     return "All cache cleared successfully!";
 })->name('clear-all');
-Route::get('/', [App\Http\Controllers\GameViewController::class, 'index'])->middleware(['auth'])->name('game.index');
+Route::get('/', [App\Http\Controllers\GameViewController::class, 'index'])->middleware(['auth', 'role:user'])->name('game.index');
 
 
 
@@ -49,6 +49,8 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
         Route::post('/{roundSchedule}/toggle', [App\Http\Controllers\Admin\RoundScheduleController::class, 'toggleActive'])->name('toggle');
         Route::delete('/{roundSchedule}', [App\Http\Controllers\Admin\RoundScheduleController::class, 'destroy'])->name('destroy');
     });
+
+    Route::get('/settlements', [App\Http\Controllers\Admin\SettlementController::class, 'index'])->name('settlements.index');
 });
 
 Route::middleware(['auth', 'role:bookman'])->prefix('bookman')->name('bookman.')->group(function () {
@@ -60,6 +62,8 @@ Route::middleware(['auth', 'role:bookman'])->prefix('bookman')->name('bookman.')
         Route::post('/', [App\Http\Controllers\Bookman\UserController::class, 'store'])->name('store');
         Route::post('/{user}/add-funds', [App\Http\Controllers\Bookman\UserController::class, 'addFunds'])->name('add-funds');
     });
+
+    Route::get('/report', [App\Http\Controllers\Bookman\ReportController::class, 'index'])->name('report');
 });
 
 Route::get('/dashboard', function () {
