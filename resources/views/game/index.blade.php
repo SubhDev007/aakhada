@@ -1,10 +1,10 @@
 @extends('layouts.mobile')
 
-@section('title', 'Akhada - Bet Now')
+@section('title', 'Aakhada - Bet Now')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center p-3 bg-primary text-white sticky-top">
-        <h5 class="m-0">Akhada</h5>
+        <h5 class="m-0">Aakhada</h5>
         <div class="d-flex align-items-center">
             @if(Auth::user()->isAdmin())
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-light me-2">Admin</a>
@@ -49,17 +49,51 @@
         </div>
 
         @if($pastRounds->count() > 0)
-            <div class="mb-3">
-                <h6 class="text-muted small text-uppercase fw-bold mb-2">Recent Results</h6>
-                <div class="d-flex overflow-auto pb-2" style="gap: 10px;">
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-muted small text-uppercase fw-bold m-0">Recent Results</h6>
+                    <small class="text-primary fw-bold" style="font-size: 0.75rem;">Scroll →</small>
+                </div>
+                <div class="results-container d-flex overflow-auto pb-2" style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
                     @foreach($pastRounds as $r)
-                        <div class="card p-2 text-center flex-shrink-0" style="min-width: 80px; width: 80px;">
-                            <small class="d-block text-muted" style="font-size: 0.7rem;">{{ $r->round_serial }}</small>
-                            <div class="fw-bold fs-5">{{ $r->result_number }}</div>
+                        @php
+                            $colorMap = [
+                                0 => '#e91e63', // Deep Pink
+                                1 => '#9c27b0', // Purple
+                                2 => '#673ab7', // Deep Purple
+                                3 => '#3f51b5', // Indigo
+                                4 => '#2196f3', // Blue
+                                5 => '#009688', // Teal
+                                6 => '#4caf50', // Green
+                                7 => '#ffc107', // Amber
+                                8 => '#ff9800', // Orange
+                                9 => '#f44336'  // Red
+                            ];
+                            $color = $colorMap[$r->result_number % 10] ?? '#6c757d';
+                        @endphp
+                        <div class="result-card bg-white shadow-sm border-0 rounded-4 p-2 text-center flex-shrink-0" 
+                             style="min-width: 80px; width: 80px; transition: transform 0.2s;">
+                            <small class="d-block text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">{{ $r->name ?? 'Round' }}</small>
+                            <div class="result-number-circle mx-auto d-flex align-items-center justify-content-center fw-bold fs-4 text-white" 
+                                 style="width: 45px; height: 45px; border-radius: 50%; background: {{ $color }}; box-shadow: 0 4px 10px {{ $color }}40;">
+                                {{ $r->result_number }}
+                            </div>
                         </div>
                     @endforeach
                 </div>
             </div>
+
+            <style>
+                .results-container::-webkit-scrollbar {
+                    display: none;
+                }
+                .result-card:active {
+                    transform: scale(0.95);
+                }
+                .result-number-circle {
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+            </style>
         @endif
 
 
@@ -152,6 +186,18 @@
         let noBetBufferSeconds = {{ $noBetBufferSeconds ?? 0 }};
         let reloadScheduled = false;
 
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
         function updateTimer() {
             const now = new Date();
             const grid = document.querySelector('.game-grid');
@@ -233,7 +279,10 @@
                 const diffSeconds = (end - now) / 1000;
 
                 if (diffSeconds < noBetBufferSeconds) {
-                    alert('Betting is closed for this round (Lock-in Period).');
+                    Toast.fire({
+                        icon: 'warning',
+                        title: 'Betting is closed for this round.'
+                    });
                     return;
                 }
             }
@@ -249,44 +298,46 @@
             input.value = (parseInt(input.value || 0) + amt);
         }
 
-        function placeBet() {
-            const amount = document.getElementById('bet-amount').value;
+        function placeBet(customAmount = null) {
+            const amount = customAmount || document.getElementById('bet-amount').value;
             if (!amount || amount < 1) {
-                alert('Invalid amount');
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Invalid amount'
+                });
                 return;
             }
+
+            // Show loading
+            Swal.fire({
+                title: 'Placing Bet...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             $.ajax({
                 url: '/game/bet',
                 method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + '{{ Auth::user() ? Auth::user()->createToken("web")->plainTextToken : "" }}' // Simple hack for demo, ideally use Sanctum SPA or standard session
-                },
-                // Wait, if I am using standard Web routes, I don't need Bearer token if utilizing Sanctum stateful?
-                // "Laravel Sanctum provides a guard for your SPA... checks the session cookie"
-                // So if I am logged in via web, I should use standard web request with CSRF token.
-                // But my API routes are under `auth:sanctum`. 
-                // I should use `web` routes for the betting or enable `EnsureFrontendRequestsAreStateful` for API.
-                // For simplicity, let's use the API endpoint but ensure we are passing the token or session.
-                // If `auth:sanctum` checks cookie, I need to configure Sanctum for SPA.
-                // OR I can just make a Web Route for placing bet in GameViewController and bypass API for this "hybrid" app.
-                // Let's stick to API but try to rely on session cookie if Sanctum is configured, otherwise I might struggle with auth in this quick setup.
-                // ACTUALLY: The simplest way for this task is to use a WEB route for placing bets since it's a blade view.
-
-                // Let's create a `placeBet` method in GameViewController or use the Api controller via internal request? No.
-                // I will update routes to allow betting via Web for simplicity or assume Sanctum works with session (it does if configured).
-                // Let's try standard AJAX with CSRF.
                 data: {
                     number: selectedNumber,
                     amount: amount,
                     _token: '{{ csrf_token() }}'
                 },
                 success: function (res) {
-                    alert('Bet Placed!');
-                    location.reload();
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Bet Placed Successfully!'
+                    });
+                    setTimeout(() => location.reload(), 1500);
                 },
                 error: function (err) {
-                    alert(err.responseJSON.message || 'Error placing bet');
+                    Swal.close(); // Close loading
+                    Toast.fire({
+                        icon: 'error',
+                        title: err.responseJSON.message || 'Error placing bet'
+                    });
                 }
             });
         }
