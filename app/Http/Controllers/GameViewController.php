@@ -51,7 +51,7 @@ class GameViewController extends Controller
 
         $pastRounds = Round::where('status', 'completed')
             ->whereDate('end_time', now()->toDateString())
-            ->orderBy('id', 'desc')
+            ->orderBy('end_time', 'desc')
             ->get();
 
         return view('game.index', compact('round', 'nextRound', 'activeBets', 'noBetBufferSeconds', 'lastRound', 'pastRounds', 'betHistory'));
