@@ -6,14 +6,18 @@
     <div class="d-flex justify-content-between align-items-center p-3 bg-primary text-white sticky-top">
         <h5 class="m-0">Aakhada</h5>
         <div class="d-flex align-items-center">
-            @if(Auth::user()->isAdmin())
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-light me-2">Admin</a>
-            @endif
-            <span class="me-2">₹ <span id="wallet-balance">{{ Auth::user()->wallet_balance ?? 0 }}</span></span>
-            <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
-            </form>
+            @auth
+                @if(Auth::user()->isAdmin())
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-light me-2">Admin</a>
+                @endif
+                <span class="me-2">₹ <span id="wallet-balance">{{ Auth::user()->wallet_balance ?? 0 }}</span></span>
+                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-light">Login</a>
+            @endauth
         </div>
     </div>
 
@@ -48,107 +52,109 @@
             @endforeach
         </div>
 
-        @if($pastRounds->count() > 0)
+        @if($todayResults->count() > 0)
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="text-muted small text-uppercase fw-bold m-0">Recent Results</h6>
+                    <h6 class="text-muted small text-uppercase fw-bold m-0">Today's Results</h6>
                     <small class="text-primary fw-bold" style="font-size: 0.75rem;">Scroll →</small>
                 </div>
                 <div class="results-container d-flex overflow-auto pb-2" style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
-                    @foreach($pastRounds as $r)
-                        @php
-                            $colorMap = [
-                                0 => '#e91e63', // Deep Pink
-                                1 => '#9c27b0', // Purple
-                                2 => '#673ab7', // Deep Purple
-                                3 => '#3f51b5', // Indigo
-                                4 => '#2196f3', // Blue
-                                5 => '#009688', // Teal
-                                6 => '#4caf50', // Green
-                                7 => '#ffc107', // Amber
-                                8 => '#ff9800', // Orange
-                                9 => '#f44336'  // Red
-                            ];
-                            $color = $colorMap[$r->result_number % 10] ?? '#6c757d';
-                        @endphp
-                        <div class="result-card bg-white shadow-sm border-0 rounded-4 p-2 text-center flex-shrink-0" 
-                             style="min-width: 80px; width: 80px; transition: transform 0.2s;">
-                            <small class="d-block text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">{{ $r->name ?? 'Round' }}</small>
-                            <div class="result-number-circle mx-auto d-flex align-items-center justify-content-center fw-bold fs-4 text-white" 
-                                 style="width: 45px; height: 45px; border-radius: 50%; background: {{ $color }}; box-shadow: 0 4px 10px {{ $color }}40;">
-                                {{ $r->result_number }}
+                    @foreach($todayResults as $r)
+                        @include('game.partials.result-card', ['r' => $r])
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if($yesterdayResults->count() > 0)
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-muted small text-uppercase fw-bold m-0">Yesterday's Results</h6>
+                    <small class="text-primary fw-bold" style="font-size: 0.75rem;">Scroll →</small>
+                </div>
+                <div class="results-container d-flex overflow-auto pb-2" style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
+                    @foreach($yesterdayResults as $r)
+                        @include('game.partials.result-card', ['r' => $r])
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        <div class="d-grid gap-2 mb-4">
+            <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info text-white fw-bold py-2 rounded-3 shadow-sm">
+                <i class="fab fa-telegram-plane me-2"></i> Join Our Telegram for ID
+            </a>
+        </div>
+
+        <style>
+            .results-container::-webkit-scrollbar {
+                display: none;
+            }
+            .result-card:active {
+                transform: scale(0.95);
+            }
+            .result-number-circle {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+        </style>
+
+
+
+        @auth
+            <!-- Active Bets -->
+            <h6 class="text-muted border-bottom pb-2">My Active Bets</h6>
+            <div id="active-bets-list" class="list-group list-group-flush mb-4 small">
+                @forelse($activeBets as $bet)
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        <div>
+                            <span class="badge bg-secondary rounded-pill me-2">#{{ $bet->chosen_number }}</span>
+                            <span class="text-muted">{{ $bet->created_at->format('H:i') }}</span>
+                        </div>
+                        <div class="fw-bold">₹{{ number_format($bet->gross_amount) }}</div>
+                    </div>
+                @empty
+                    <div class="text-muted text-center py-2">No active bets for this round.</div>
+                @endforelse
+            </div>
+        @endauth
+
+        @auth
+            <!-- Bet History -->
+            @if($betHistory->count() > 0)
+                <h6 class="text-muted border-bottom pb-2 mt-4">My Bet History</h6>
+                <div class="list-group list-group-flush mb-4 small">
+                    @foreach($betHistory as $bet)
+                        <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-secondary rounded-pill me-2">#{{ $bet->chosen_number }}</span>
+                                    @if($bet->status == 'won')
+                                        <span class="badge bg-success">WIN</span>
+                                    @elseif($bet->status == 'lost')
+                                        <span class="badge bg-danger">LOSS</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">{{ strtoupper($bet->status) }}</span>
+                                    @endif
+                                </div>
+                                <small class="text-muted d-block mt-1">{{ $bet->round->round_serial ?? 'N/A' }} |
+                                    {{ $bet->created_at->format('d M H:i') }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold fs-6">
+                                    @if($bet->status == 'won')
+                                        <span class="text-success">+₹{{ number_format($bet->winnings) }}</span>
+                                    @elseif($bet->status == 'lost')
+                                        <span class="text-danger">-₹{{ number_format($bet->gross_amount) }}</span>
+                                    @else
+                                        <span>₹{{ number_format($bet->gross_amount) }}</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
-
-            <style>
-                .results-container::-webkit-scrollbar {
-                    display: none;
-                }
-                .result-card:active {
-                    transform: scale(0.95);
-                }
-                .result-number-circle {
-                    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-            </style>
-        @endif
-
-
-
-        <!-- Active Bets -->
-        <h6 class="text-muted border-bottom pb-2">My Active Bets</h6>
-        <div id="active-bets-list" class="list-group list-group-flush mb-4 small">
-            @forelse($activeBets as $bet)
-                <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
-                    <div>
-                        <span class="badge bg-secondary rounded-pill me-2">#{{ $bet->chosen_number }}</span>
-                        <span class="text-muted">{{ $bet->created_at->format('H:i') }}</span>
-                    </div>
-                    <div class="fw-bold">₹{{ number_format($bet->gross_amount) }}</div>
-                </div>
-            @empty
-                <div class="text-muted text-center py-2">No active bets for this round.</div>
-            @endforelse
-        </div>
-
-        <!-- Bet History -->
-        @if($betHistory->count() > 0)
-            <h6 class="text-muted border-bottom pb-2 mt-4">My Bet History</h6>
-            <div class="list-group list-group-flush mb-4 small">
-                @foreach($betHistory as $bet)
-                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
-                        <div>
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-secondary rounded-pill me-2">#{{ $bet->chosen_number }}</span>
-                                @if($bet->status == 'won')
-                                    <span class="badge bg-success">WIN</span>
-                                @elseif($bet->status == 'lost')
-                                    <span class="badge bg-danger">LOSS</span>
-                                @else
-                                    <span class="badge bg-warning text-dark">{{ strtoupper($bet->status) }}</span>
-                                @endif
-                            </div>
-                            <small class="text-muted d-block mt-1">{{ $bet->round->round_serial ?? 'N/A' }} |
-                                {{ $bet->created_at->format('d M H:i') }}</small>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold fs-6">
-                                @if($bet->status == 'won')
-                                    <span class="text-success">+₹{{ number_format($bet->winnings) }}</span>
-                                @elseif($bet->status == 'lost')
-                                    <span class="text-danger">-₹{{ number_format($bet->gross_amount) }}</span>
-                                @else
-                                    <span>₹{{ number_format($bet->gross_amount) }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @endif
+            @endif
+        @endauth
     </div>
 
     <!-- Bet Modal -->
@@ -272,6 +278,22 @@
 
 
         function openBetModal(num) {
+            @guest
+                Swal.fire({
+                    title: 'Login Required',
+                    text: 'Please login to place a bet.',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Login',
+                    cancelButtonText: 'Maybe later'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ route('login') }}";
+                    }
+                });
+                return;
+            @endguest
+
             // Check Lock-in
             if (roundEndTime) {
                 const now = new Date();

@@ -48,10 +48,20 @@ class DatabaseSeeder extends Seeder
             Setting::firstOrCreate(['key' => $key], ['value' => $value]);
         }
 
-        // 4. Ensure an active round exists
-        $service = new GameService();
-        if (!\App\Models\Round::active()->exists()) {
-            $service->createNextRound();
+        // 4. Default Round Schedules
+        $schedules = [
+            ['name' => 'Morning Special', 'start_time' => '10:00:00', 'duration_minutes' => 60],
+            ['name' => 'Afternoon Classic', 'start_time' => '14:00:00', 'duration_minutes' => 60],
+            ['name' => 'Evening Rush', 'start_time' => '18:00:00', 'duration_minutes' => 60],
+            ['name' => 'Night Owl', 'start_time' => '22:00:00', 'duration_minutes' => 120],
+        ];
+
+        foreach ($schedules as $s) {
+            \App\Models\RoundSchedule::firstOrCreate(['name' => $s['name']], $s);
         }
+
+        // 5. Generate rounds for today
+        $service = new GameService();
+        $service->generateTodaysRounds();
     }
 }

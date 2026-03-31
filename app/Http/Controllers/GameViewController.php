@@ -49,11 +49,28 @@ class GameViewController extends Controller
             ->orderBy('id', 'desc')
             ->first();
 
-        $pastRounds = Round::where('status', 'completed')
+        $todayResults = Round::where('status', 'completed')
             ->whereDate('end_time', now()->toDateString())
             ->orderBy('end_time', 'desc')
             ->get();
 
-        return view('game.index', compact('round', 'nextRound', 'activeBets', 'noBetBufferSeconds', 'lastRound', 'pastRounds', 'betHistory'));
+        $yesterdayResults = Round::where('status', 'completed')
+            ->whereDate('end_time', now()->subDay()->toDateString())
+            ->orderBy('end_time', 'desc')
+            ->get();
+
+        $telegramLink = \App\Models\Setting::getValue('telegram_link', '#');
+
+        return view('game.index', compact(
+            'round', 
+            'nextRound', 
+            'activeBets', 
+            'noBetBufferSeconds', 
+            'lastRound', 
+            'todayResults', 
+            'yesterdayResults', 
+            'betHistory',
+            'telegramLink'
+        ));
     }
 }

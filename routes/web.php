@@ -13,7 +13,7 @@ Route::get('/clear-all', function () {
     Artisan::call('optimize:clear');
     return "All cache cleared successfully!";
 })->name('clear-all');
-Route::get('/', [App\Http\Controllers\GameViewController::class, 'index'])->middleware(['auth', 'role:user'])->name('game.index');
+Route::get('/', [App\Http\Controllers\GameViewController::class, 'index'])->name('game.index');
 
 
 
