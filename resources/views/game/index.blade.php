@@ -86,7 +86,7 @@
             <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info text-white fw-bold py-2 rounded-3 shadow-sm">
                 <i class="bi bi-telegram me-2"></i> Join Our Telegram for ID
             </a>
-            <a href="https://wa.me/917732937526" target="_blank" class="btn btn-success py-2 rounded-3 shadow-sm text-white fw-bold">
+            <a href="https://wa.me/917732937526?text=I%20need%20ID%20for%20Aakhada" target="_blank" class="btn btn-success py-2 rounded-3 shadow-sm text-white fw-bold">
                 <i class="bi bi-whatsapp me-2"></i> Get ID on Whatsapp
             </a>
         </div>
