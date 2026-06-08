@@ -25,7 +25,8 @@
 
         .sidebar {
             min-height: 100vh;
-            background: #7f1d1d; /* Deep red */
+            background: #7f1d1d;
+            /* Deep red */
             color: white;
         }
 
@@ -64,7 +65,8 @@
                             <i class="bi bi-wallet2 text-white me-2 fs-5"></i>
                             <div>
                                 <small class="text-white opacity-75 d-block" style="line-height: 1;">Balance</small>
-                                <span class="fw-bold text-white">₹{{ number_format(auth()->user()->wallet_balance, 2) }}</span>
+                                <span
+                                    class="fw-bold text-white">₹{{ number_format(auth()->user()->wallet_balance, 2) }}</span>
                             </div>
                         </div>
                     </div>

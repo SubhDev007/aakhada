@@ -58,7 +58,8 @@
                     <h6 class="text-muted small text-uppercase fw-bold m-0">Today's Results</h6>
                     <small class="text-primary fw-bold" style="font-size: 0.75rem;">Scroll →</small>
                 </div>
-                <div class="results-container d-flex overflow-auto pb-2" style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
+                <div class="results-container d-flex overflow-auto pb-2"
+                    style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
                     @foreach($todayResults as $r)
                         @include('game.partials.result-card', ['r' => $r])
                     @endforeach
@@ -72,7 +73,8 @@
                     <h6 class="text-muted small text-uppercase fw-bold m-0">Yesterday's Results</h6>
                     <small class="text-primary fw-bold" style="font-size: 0.75rem;">Scroll →</small>
                 </div>
-                <div class="results-container d-flex overflow-auto pb-2" style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
+                <div class="results-container d-flex overflow-auto pb-2"
+                    style="gap: 12px; scrollbar-width: none; -ms-overflow-style: none;">
                     @foreach($yesterdayResults as $r)
                         @include('game.partials.result-card', ['r' => $r])
                     @endforeach
@@ -82,7 +84,10 @@
 
         <div class="d-grid gap-2 mb-4">
             <a href="{{ $telegramLink }}" target="_blank" class="btn btn-info text-white fw-bold py-2 rounded-3 shadow-sm">
-                <i class="fab fa-telegram-plane me-2"></i> Join Our Telegram for ID
+                <i class="bi bi-telegram me-2"></i> Join Our Telegram for ID
+            </a>
+            <a href="https://wa.me/917732937526" target="_blank" class="btn btn-success py-2 rounded-3 shadow-sm text-white fw-bold">
+                <i class="bi bi-whatsapp me-2"></i> Get ID on Whatsapp
             </a>
         </div>
 
@@ -90,11 +95,13 @@
             .results-container::-webkit-scrollbar {
                 display: none;
             }
+
             .result-card:active {
                 transform: scale(0.95);
             }
+
             .result-number-circle {
-                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
         </style>
 
@@ -186,9 +193,9 @@
 @push('scripts')
     <script>
         let selectedNumber = null;
-        let roundEndTime   = "{{ $round ? $round->end_time->toIso8601String() : '' }}";
+        let roundEndTime = "{{ $round ? $round->end_time->toIso8601String() : '' }}";
         let roundStartTime = "{{ $nextRound ? $nextRound->start_time->toIso8601String() : '' }}";
-        let isUpcoming     = {{ $round ? 'false' : ($nextRound ? 'true' : 'false') }};
+        let isUpcoming = {{ $round ? 'false' : ($nextRound ? 'true' : 'false') }};
         let noBetBufferSeconds = {{ $noBetBufferSeconds ?? 0 }};
         let reloadScheduled = false;
 
@@ -294,8 +301,8 @@
                 return;
             @endguest
 
-            // Check Lock-in
-            if (roundEndTime) {
+                                            // Check Lock-in
+                                            if (roundEndTime) {
                 const now = new Date();
                 const end = new Date(roundEndTime);
                 const diffSeconds = (end - now) / 1000;
